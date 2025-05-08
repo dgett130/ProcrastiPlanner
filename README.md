@@ -4,8 +4,6 @@
 
 ProcrastiPlanner è un'applicazione web per la gestione di progetti e idee personali, progettata per chi ama rimandare... ma con metodo! Ti permette di organizzare, tracciare e sviluppare le tue idee e i tuoi progetti in un unico posto, anche quando non hai voglia di lavorarci subito.
 
-![ProcrastiPlanner Screenshot](https://placeholder.svg?height=300&width=700)
-
 ## ✨ Funzionalità
 
 - **Autenticazione Utente**: Accedi con il tuo profilo personale (attualmente in modalità mock)
@@ -34,7 +32,7 @@ ProcrastiPlanner è un'applicazione web per la gestione di progetti e idee perso
 
 1. Clona il repository:
    ```bash
-   git clone https://github.com/tuousername/procrastiplanner.git
+   git clone https://github.com/dgett130/procrastiplanner.git
    cd procrastiplanner
    
 2. Installa le dipendenze:
