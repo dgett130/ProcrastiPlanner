@@ -17,7 +17,7 @@ export default function DashboardPage() {
     <div className="flex flex-col min-h-screen">
       <DashboardHeader userEmail={userEmail} />
       <main className="flex-1 container mx-auto py-6 px-4">
-        <DashboardContent />
+        <DashboardContent userEmail={userEmail} />
       </main>
     </div>
   )

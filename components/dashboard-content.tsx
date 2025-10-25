@@ -6,6 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import { toast } from "@/hooks/use-toast"
 import { Edit, Trash2 } from "lucide-react"
 
 // Tipi di dati
@@ -62,7 +63,20 @@ const mockProjects: Project[] = [
   },
 ]
 
-export default function DashboardContent() {
+interface DashboardContentProps {
+  userEmail?: string
+}
+
+const WELCOME_FLAG_PREFIX = "dashboard-welcome-toast"
+
+// Configurazione toast di benvenuto
+const TOAST_CONFIG = {
+  maxShowCount: 3,        // Numero massimo di volte che il toast appare (0 = infinito)
+  storageType: 'session', // 'session' = solo per questa sessione browser, 'local' = permanente
+  resetDaily: false,      // true = resetta il conteggio ogni giorno
+}
+
+export default function DashboardContent({ userEmail }: DashboardContentProps) {
   const [ideas, setIdeas] = useState<Idea[]>([])
   const [projects, setProjects] = useState<Project[]>([])
 
@@ -71,6 +85,68 @@ export default function DashboardContent() {
     setIdeas(mockIdeas)
     setProjects(mockProjects)
   }, [])
+
+  useEffect(() => {
+    if (typeof window === "undefined") {
+      return
+    }
+
+    const storage = TOAST_CONFIG.storageType === 'local' ? window.localStorage : window.sessionStorage
+    const storageKey = `${WELCOME_FLAG_PREFIX}-${userEmail ?? "guest"}`
+
+    // Leggi i dati salvati
+    const savedData = storage.getItem(storageKey)
+    let showCount = 0
+    let lastShownDate = ''
+
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData)
+        showCount = parsed.count || 0
+        lastShownDate = parsed.date || ''
+      } catch {
+        // Se il formato è vecchio (solo "true"), resetta
+        showCount = 1
+      }
+    }
+
+    // Controlla se dobbiamo resettare il conteggio (reset giornaliero)
+    if (TOAST_CONFIG.resetDaily) {
+      const today = new Date().toISOString().split('T')[0]
+      if (lastShownDate !== today) {
+        showCount = 0
+        lastShownDate = today
+      }
+    }
+
+    // Controlla se abbiamo raggiunto il limite
+    if (TOAST_CONFIG.maxShowCount > 0 && showCount >= TOAST_CONFIG.maxShowCount) {
+      return
+    }
+
+    // Incrementa il conteggio e salva
+    showCount++
+    storage.setItem(storageKey, JSON.stringify({
+      count: showCount,
+      date: TOAST_CONFIG.resetDaily ? new Date().toISOString().split('T')[0] : lastShownDate,
+    }))
+
+    const friendlyName = userEmail?.split("@")[0] || undefined
+    const greetingTitle = friendlyName ? `Ciao, ${friendlyName}! 😊` : "Benvenuto! 😊"
+
+    // Ritardiamo leggermente il toast per dare tempo al Toaster di montarsi
+    const timeoutId = setTimeout(() => {
+      toast({
+        title: greetingTitle,
+        description: "Felici di averti qui. Buona giornata e buon lavoro sui tuoi progetti!",
+        duration: 3800,
+        className:
+          "border-emerald-200/70 bg-emerald-50 text-emerald-900 shadow-lg shadow-emerald-200/40 dark:border-emerald-900/60 dark:bg-emerald-950/80 dark:text-emerald-50",
+      })
+    }, 100)
+
+    return () => clearTimeout(timeoutId)
+  }, [userEmail])
 
   const deleteIdea = (id: string) => {
     setIdeas(ideas.filter((idea) => idea.id !== id))
