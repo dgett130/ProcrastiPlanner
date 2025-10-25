@@ -17,6 +17,11 @@ interface DashboardHeaderProps {
 export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
   const router = useRouter()
 
+  const handleProfileNavigation = () => {
+    // Keep profile navigation co-located with logout so account tasks stay grouped.
+    router.push("/profile")
+  }
+
   const handleLogout = () => {
     // 1) Clear auth cookies so the session is invalidated on the next request.
     document.cookie = "auth-session=; path=/; max-age=0"
@@ -76,6 +81,11 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
+              {/* Profile shortcut sits above destructive actions to encourage exploration before exit. */}
+              <DropdownMenuItem onClick={handleProfileNavigation}>
+                <User className="mr-2 h-4 w-4" />
+                <span>Profile</span>
+              </DropdownMenuItem>
               <DropdownMenuItem onClick={handleLogout}>
                 <LogOut className="mr-2 h-4 w-4" />
                 <span>Logout</span>
