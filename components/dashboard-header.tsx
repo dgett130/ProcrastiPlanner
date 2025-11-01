@@ -58,20 +58,6 @@ export function DashboardHeader({ userEmail }: DashboardHeaderProps) {
             </Link>
           </Button>
 
-          {/* Profile shortcut appears immediately before logout controls to mirror the requested hierarchy. */}
-          <Button
-            asChild
-            variant="secondary"
-            size="sm"
-            className="gap-2"
-          >
-            <Link href="/profile" aria-label="Apri il profilo utente dalla dashboard">
-              <UserCircle className="h-4 w-4" />
-              {/* Hide the label on very small screens to keep the toolbar compact while keeping assistive text. */}
-              <span className="hidden sm:inline">Profile</span>
-            </Link>
-          </Button>
-
           {/* Dropdown keeps account-specific actions (currently logout) grouped behind a single trigger. */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>

@@ -3,8 +3,8 @@ import { redirect } from "next/navigation"
 import DashboardContent from "@/components/dashboard-content"
 import { DashboardHeader } from "@/components/dashboard-header"
 
-export default function DashboardPage() {
-  const cookieStore = cookies()
+export default async function DashboardPage() {
+  const cookieStore = await cookies()
   const isAuthenticated = cookieStore.has("auth-session")
 
   if (!isAuthenticated) {

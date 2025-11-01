@@ -1,4 +1,5 @@
 import useSWR from 'swr';
+import { fetcher as baseFetcher } from "@/lib/fetcher";
 
 export type Idea = {
   text: string;
@@ -8,20 +9,28 @@ export type Idea = {
 export type Project = {
   _id: string;
   name: string;
+  description?: string;
+  technologies?: string[];
+  functionality?: string[];
   ideas?: Idea[];
+  createdAt: string;
+  updatedAt: string;
 };
+
 
 const fetcher = async (url: string): Promise<Project[]> => {
-  const response = await fetch(url);
+  console.log('🔵 Fetching projects from:', url);
 
-  if (!response.ok) {
-    throw new Error('Failed to fetch projects');
-  }
+  const response = await baseFetcher<{ success: boolean; data: Project[]}>(url);
 
-  return response.json();
-};
+  console.log('📦 Response:', response);
+  console.log('📦 Projects data:', response.data);
+
+  return response.data; // ⬅️ AGGIUNTO IL RETURN!
+}
 
 export function useProjects() {
+
   const { data, error, isValidating, mutate } = useSWR<Project[]>('/api/projects', fetcher);
 
   return {

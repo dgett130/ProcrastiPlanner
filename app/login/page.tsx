@@ -8,27 +8,35 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { useAuth} from "@/app/hooks/useAuth";
+
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState("")
   const router = useRouter()
+  const login = useAuth()
 
   const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsLoading(true)
+    e.preventDefault();
+    setIsLoading(true);
+    setError(""); // Reset eventuale errore
 
-    // Simuliamo un ritardo per il login
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      // Chiamo la funzione API di login
+      await login.login(email, password);
 
-    // Mock dell'autenticazione - salviamo un cookie
-    document.cookie = "auth-session=mock-token; path=/; max-age=86400"
-    document.cookie = `user-email=${email}; path=/; max-age=86400`
+      router.push("/dashboard");
+      router.refresh();
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : "Errore durante il login";
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
 
-    setIsLoading(false)
-    router.push("/dashboard")
-    router.refresh()
   }
 
   return (
@@ -61,13 +69,18 @@ export default function LoginPage() {
                 required
               />
             </div>
+            { error && (
+             <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+               {error}
+             </div>
+            )}
             <Button type="submit" className="w-full" disabled={isLoading}>
               {isLoading ? "Accesso in corso..." : "Accedi"}
             </Button>
           </form>
         </CardContent>
         <CardFooter className="flex justify-center">
-          <p className="text-sm text-muted-foreground">Questa è una versione demo con autenticazione simulata</p>
+          <p className="text-sm text-muted-foreground">Accedi con le tue credenziali</p>
         </CardFooter>
       </Card>
     </div>

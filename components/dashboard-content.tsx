@@ -8,60 +8,26 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { toast } from "@/hooks/use-toast"
 import { Edit, Trash2 } from "lucide-react"
+import {useProjects} from "@/app/hooks/useProjects";
 
 // Tipi di dati
 interface Idea {
   id: string
-  title: string
-  description: string
+  text: string
   createdAt: string
+  projectId?: string
+    projectName?: string
 }
 
 interface Project {
   id: string
-  title: string
+  name: string
   description: string
   technologies: string[]
-  features: string[]
+  functionality: string[]
+  ideas?: Idea[]
   createdAt: string
 }
-
-// Dati di esempio
-const mockIdeas: Idea[] = [
-  {
-    id: "1",
-    title: "App per la gestione delle spese",
-    description: "Un'applicazione che aiuta a tenere traccia delle spese quotidiane e fornisce report mensili.",
-    createdAt: "2023-05-15T10:30:00Z",
-  },
-  {
-    id: "2",
-    title: "Sistema di prenotazione per ristoranti",
-    description:
-      "Un sistema che permette ai clienti di prenotare tavoli online e ai ristoranti di gestire le prenotazioni.",
-    createdAt: "2023-06-20T14:45:00Z",
-  },
-]
-
-const mockProjects: Project[] = [
-  {
-    id: "1",
-    title: "E-commerce di prodotti artigianali",
-    description: "Piattaforma per la vendita di prodotti artigianali locali con sistema di pagamento integrato.",
-    technologies: ["React", "Node.js", "MongoDB"],
-    features: ["Carrello", "Pagamenti", "Recensioni"],
-    createdAt: "2023-04-10T09:15:00Z",
-  },
-  {
-    id: "2",
-    title: "Social network per fotografi",
-    description:
-      "Piattaforma dove i fotografi possono condividere il loro lavoro e connettersi con altri professionisti.",
-    technologies: ["Vue.js", "Firebase", "Cloudinary"],
-    features: ["Gallerie", "Commenti", "Profili"],
-    createdAt: "2023-07-05T16:20:00Z",
-  },
-]
 
 interface DashboardContentProps {
   userEmail?: string
@@ -77,14 +43,16 @@ const TOAST_CONFIG = {
 }
 
 export default function DashboardContent({ userEmail }: DashboardContentProps) {
-  const [ideas, setIdeas] = useState<Idea[]>([])
-  const [projects, setProjects] = useState<Project[]>([])
 
-  useEffect(() => {
-    // Simuliamo il caricamento dei dati
-    setIdeas(mockIdeas)
-    setProjects(mockProjects)
-  }, [])
+  const { projects, loading, error } = useProjects()
+
+  const ideas = projects.flatMap(p =>
+      (p.ideas || []).map(idea => ({
+        ...idea,
+        projectId: p._id,
+        projectName: p.name,
+      }))
+  )
 
   useEffect(() => {
     if (typeof window === "undefined") {
@@ -148,12 +116,26 @@ export default function DashboardContent({ userEmail }: DashboardContentProps) {
     return () => clearTimeout(timeoutId)
   }, [userEmail])
 
+  if (loading) {
+    return <div className="flex items-center justify-center min-h-[400px]">
+      <p className="text-muted-foreground">Caricamento dei tuoi progetti...</p>
+    </div>
+  }
+
+  if (error) {
+    return <div className="flex items-center justify-center min-h-[400px]">
+      <div className="text-center space-y-2">
+        <p className="text-red-600 font-medium">Errore nel caricamento</p>
+        <p className="text-sm text-muted-foreground">{error.message}</p>
+      </div>
+    </div>
+  }
+
+
   const deleteIdea = (id: string) => {
-    setIdeas(ideas.filter((idea) => idea.id !== id))
   }
 
   const deleteProject = (id: string) => {
-    setProjects(projects.filter((project) => project.id !== id))
   }
 
   const formatDate = (dateString: string) => {
@@ -181,11 +163,11 @@ export default function DashboardContent({ userEmail }: DashboardContentProps) {
         <TabsContent value="all" className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {projects.map((project) => (
-              <ProjectCard key={project.id} project={project} onDelete={deleteProject} />
+              <ProjectCard key={project._id} project={project} onDelete={deleteProject} />
             ))}
 
             {ideas.map((idea) => (
-              <IdeaCard key={idea.id} idea={idea} onDelete={deleteIdea} />
+              <IdeaCard key={idea.projectId} idea={idea} onDelete={deleteIdea} />
             ))}
           </div>
         </TabsContent>
@@ -193,7 +175,7 @@ export default function DashboardContent({ userEmail }: DashboardContentProps) {
         <TabsContent value="projects" className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {projects.map((project) => (
-              <ProjectCard key={project.id} project={project} onDelete={deleteProject} />
+              <ProjectCard key={project._id} project={project} onDelete={deleteProject} />
             ))}
           </div>
         </TabsContent>
@@ -201,7 +183,7 @@ export default function DashboardContent({ userEmail }: DashboardContentProps) {
         <TabsContent value="ideas" className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {ideas.map((idea) => (
-              <IdeaCard key={idea.id} idea={idea} onDelete={deleteIdea} />
+              <IdeaCard key={idea.projectId} idea={idea} onDelete={deleteIdea} />
             ))}
           </div>
         </TabsContent>
@@ -214,7 +196,7 @@ function ProjectCard({ project, onDelete }: { project: Project; onDelete: (id: s
   return (
     <Card>
       <CardHeader>
-        <CardTitle>{project.title}</CardTitle>
+        <CardTitle>{project.name}</CardTitle>
         <CardDescription>Creato il {formatDate(project.createdAt)}</CardDescription>
       </CardHeader>
       <CardContent>
@@ -230,7 +212,7 @@ function ProjectCard({ project, onDelete }: { project: Project; onDelete: (id: s
           <div>
             <p className="text-xs font-medium mb-1">Funzionalità:</p>
             <ul className="text-xs text-muted-foreground list-disc pl-4">
-              {project.features.map((feature) => (
+              {project.functionality.map((feature) => (
                 <li key={feature}>{feature}</li>
               ))}
             </ul>
@@ -257,14 +239,11 @@ function IdeaCard({ idea, onDelete }: { idea: Idea; onDelete: (id: string) => vo
     <Card>
       <CardHeader>
         <div className="flex items-center justify-between">
-          <CardTitle>{idea.title}</CardTitle>
+          <CardTitle>{idea.text}</CardTitle>
           <Badge>Idea</Badge>
         </div>
         <CardDescription>Creato il {formatDate(idea.createdAt)}</CardDescription>
       </CardHeader>
-      <CardContent>
-        <p className="text-sm text-muted-foreground">{idea.description}</p>
-      </CardContent>
       <CardFooter className="flex justify-between">
         <Button variant="outline" size="sm" asChild>
           <Link href={`/ideas/${idea.id}`}>
