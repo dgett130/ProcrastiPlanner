@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge"
 import { toast } from "@/hooks/use-toast"
 import { Edit, Trash2 } from "lucide-react"
 import {useProjects} from "@/app/hooks/useProjects";
+import {useRouter} from "next/navigation";
 
 // Tipi di dati
 interface Idea {
@@ -44,7 +45,8 @@ const TOAST_CONFIG = {
 
 export default function DashboardContent({ userEmail }: DashboardContentProps) {
 
-  const { projects, loading, error } = useProjects()
+  const { projects, loading, error, deleteProject, isDeleting, deleteError } = useProjects()
+  const router = useRouter()
 
   const ideas = projects.flatMap(p =>
       (p.ideas || []).map(idea => ({
@@ -135,7 +137,14 @@ export default function DashboardContent({ userEmail }: DashboardContentProps) {
   const deleteIdea = (id: string) => {
   }
 
-  const deleteProject = (id: string) => {
+  const handleDeleteProject = async (id: string) => {
+    try {
+      await deleteProject(id);
+
+      router.push('/dashboard');
+    } catch (err) {
+      console.log('Errore durante l\'eliminazione del progetto:', err);
+    }
   }
 
   const formatDate = (dateString: string) => {
@@ -163,7 +172,7 @@ export default function DashboardContent({ userEmail }: DashboardContentProps) {
         <TabsContent value="all" className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {projects.map((project) => (
-              <ProjectCard key={project._id} project={project} onDelete={deleteProject} />
+              <ProjectCard key={project._id} project={project} onDelete={() => handleDeleteProject(project._id)} />
             ))}
 
             {ideas.map((idea) => (
@@ -175,7 +184,7 @@ export default function DashboardContent({ userEmail }: DashboardContentProps) {
         <TabsContent value="projects" className="space-y-6">
           <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {projects.map((project) => (
-              <ProjectCard key={project._id} project={project} onDelete={deleteProject} />
+              <ProjectCard key={project._id} project={project} onDelete={() => handleDeleteProject(project._id)} />
             ))}
           </div>
         </TabsContent>

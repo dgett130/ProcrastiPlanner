@@ -56,7 +56,7 @@ const persistToken = (token: string | null, maxAgeSeconds: number = DEFAULT_MAX_
   }
 };
 
-const readToken = () => {
+export const readToken = () => {
   if (!isBrowser()) {
     return null;
   }

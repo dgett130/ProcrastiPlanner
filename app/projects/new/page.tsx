@@ -10,16 +10,17 @@ import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { X, Plus } from "lucide-react"
+import { useProjects } from "@/app/hooks/useProjects"
 
 export default function NewProjectPage() {
   const router = useRouter()
+  const { createProject, isCreating, createError } = useProjects()
   const [title, setTitle] = useState("")
   const [description, setDescription] = useState("")
   const [technology, setTechnology] = useState("")
   const [technologies, setTechnologies] = useState<string[]>([])
   const [feature, setFeature] = useState("")
   const [features, setFeatures] = useState<string[]>([])
-  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const addTechnology = () => {
     if (technology.trim() !== "" && !technologies.includes(technology.trim())) {
@@ -44,23 +45,20 @@ export default function NewProjectPage() {
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    setIsSubmitting(true)
+    e.preventDefault();
 
-    // Simuliamo un ritardo per il salvataggio
-    await new Promise((resolve) => setTimeout(resolve, 1000))
+    try {
+      await createProject({
+        name: title,
+        description,
+        technologies,
+        functionality: features,
+      })
 
-    // In una vera applicazione, qui salveremmo i dati nel database
-    console.log({
-      title,
-      description,
-      technologies,
-      features,
-      createdAt: new Date().toISOString(),
-    })
-
-    setIsSubmitting(false)
-    router.push("/dashboard")
+      router.push("/dashboard");
+    } catch (err) {
+        console.error("Errore durante la creazione del progetto:", err);
+    }
   }
 
   return (
@@ -75,6 +73,11 @@ export default function NewProjectPage() {
               <CardDescription>Inserisci le informazioni per il tuo nuovo progetto</CardDescription>
             </CardHeader>
 
+            {createError && (
+                <div className="bg-destructive/15 text-destructive px-4 py-3 rounded-md mb-4">
+                  {createError}
+                </div>
+            )}
             <CardContent className="space-y-4">
               <div className="space-y-2">
                 <Label htmlFor="title">Titolo</Label>
@@ -177,8 +180,8 @@ export default function NewProjectPage() {
               <Button type="button" variant="outline" onClick={() => router.back()}>
                 Annulla
               </Button>
-              <Button type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Salvataggio..." : "Salva Progetto"}
+              <Button type="submit" disabled={isCreating}>
+                {isCreating ? "Salvataggio..." : "Salva Progetto"}
               </Button>
             </CardFooter>
           </form>
